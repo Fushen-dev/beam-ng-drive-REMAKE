@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crumple 3D - WebGL Driving Sandbox</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="gauges">
+    <div class="gauge"><b id="speed">0</b><span>km/h</span></div>
+    <div class="gauge"><b id="dmg">0</b><span>% damage</span></div>
+  </div>
+
+  <aside id="panel">
+    <h1>Crumple 3D</h1>
+    <p class="sub">A 3D node-beam soft-body car. Drive it, then break it.</p>
+    <dl class="keys">
+      <dt>W / Up</dt><dd>Gas</dd>
+      <dt>S / Down</dt><dd>Brake, then reverse</dd>
+      <dt>A D / Left Right</dt><dd>Steer</dd>
+      <dt>Space</dt><dd>Handbrake</dd>
+      <dt>R</dt><dd>Reset car</dd>
+      <dt>C</dt><dd>Change camera</dd>
+      <dt>B</dt><dd>Show the beams</dd>
+      <dt>T</dt><dd>Slow motion</dd>
+    </dl>
+    <label for="strength">Body strength <output id="strengthOut">1.0x</output></label>
+    <input id="strength" type="range" min="0.3" max="3" step="0.1" value="1">
+    <div class="row">
+      <button id="resetBtn" type="button">Reset</button>
+      <button id="beamBtn" type="button">Beams</button>
+      <button id="slowBtn" type="button">Slow-mo</button>
+    </div>
+  </aside>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
