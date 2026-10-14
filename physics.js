@@ -49,14 +49,20 @@ const Phys = (() => {
     for (let i = 3; i <= 5; i++) for (let j = 0; j < 2; j++) addN(XS[i], 1.42 - (i === 5 ? .06 : 0), (j ? 1 : -1) * WS[i] * .78, 27, .5, 0, 0);
     const nBody = mass.length;
 
-    const BA = [], BB = [], BL = [], BK = [], BC = [], BT = [], YCa = [], YTa = [];
-    const addB = (a, b, k, c, t, yc, yt) => {
-      BA.push(a); BB.push(b); BK.push(k); BC.push(c); BT.push(t); YCa.push(yc || 0); YTa.push(yt || 0);
+    const BA = [], BB = [], BL = [], BK = [], BC = [], BT = [], YCa = [], YTa = [], springBeam = [];
+    const addB = (a, b, k, c, t, yc, yt, isSpring = false) => {
+      BA.push(a); BB.push(b); BK.push(k); BC.push(c); BT.push(t); YCa.push(yc || 0); YTa.push(yt || 0); springBeam.push(isSpring ? 1 : 0);
       BL.push(Math.hypot(pos[a * 3] - pos[b * 3], pos[a * 3 + 1] - pos[b * 3 + 1], pos[a * 3 + 2] - pos[b * 3 + 2])); return BA.length - 1;
     };
     for (let i = 0; i < nBody; i++) for (let j = i + 1; j < nBody; j++) {
       const d = Math.hypot(pos[i * 3] - pos[j * 3], pos[i * 3 + 1] - pos[j * 3 + 1], pos[i * 3 + 2] - pos[j * 3 + 2]);
-      if (d < 1.7) { const z = Math.max(zone[i], zone[j]); addB(i, j, 3e5, 800, 0, YC[z], YT[z]); }   // weakest end decides
+      if (d < 1.7) {
+        const z = Math.max(zone[i], zone[j]);
+        // Keep the passenger cell firm while the front/rear rails remain engineered to crush.
+        const k = z === 0 ? 1.25e6 : z === 1 ? 8.5e5 : 4.8e5;
+        const c = z === 0 ? 2600 : z === 1 ? 1900 : 1300;
+        addB(i, j, k, c, 0, YC[z], YT[z]);
+      }
     }
     S.bodyBeams = BA.length;
 
@@ -65,10 +71,10 @@ const Phys = (() => {
       const cx = XS[front ? 6 : 2], cz = side * 1.0, cy = .38;
       const hl = addN(cx, cy, cz - .12, 8, 0, 2), hr = addN(cx, cy, cz + .12, 8, 0, 2), rim = [];
       for (let i = 0; i < RN; i++) { const a = i / RN * Math.PI * 2; rim.push(addN(cx + Math.cos(a) * WR, cy + Math.sin(a) * WR, cz, 3, 1.3, 1)); }
-      addB(hl, hr, 3e5, 400, 1);
+      addB(hl, hr, 4.5e5, 800, 1);
       for (let i = 0; i < RN; i++) {
-        addB(hl, rim[i], 1e5, 250, 1); addB(hr, rim[i], 1e5, 250, 1);
-        addB(rim[i], rim[(i + 1) % RN], 2.5e5, 200, 1); addB(rim[i], rim[(i + 2) % RN], 2.5e5, 200, 1);
+        addB(hl, rim[i], 4.5e5, 650, 1); addB(hr, rim[i], 4.5e5, 650, 1);
+        addB(rim[i], rim[(i + 1) % RN], 6e5, 750, 1); addB(rim[i], rim[(i + 2) % RN], 4.8e5, 600, 1);
       }
       const j = side < 0 ? 0 : 1, ip = front ? 5 : 3, A = low(ip, j), P2 = low(ip, 1 - j), U = mid(front ? 6 : 2, j);
       const stiff = [], p = (n, k) => pos[n * 3 + k];     // trailing arm: 4 stiff links = wheel can only pitch up/down
@@ -76,7 +82,7 @@ const Phys = (() => {
         addB(h, A, 6e5, 2500, 2);
         const lb = addB(h, P2, 6e5, 2500, 2);
         stiff.push({ b: lb, rx: p(h, 0) - p(A, 0), ry: p(h, 1) - p(A, 1), rz: p(h, 2) - p(A, 2), dx: p(P2, 0) - p(A, 0), dy: p(P2, 1) - p(A, 1), dz: p(P2, 2) - p(A, 2) });
-        BL[addB(h, U, 2.2e4, 2000, 2)] += .07;            // coil-over spring + damper, preloaded to carry the car's weight
+        BL[addB(h, U, 5.5e4, 3200, 2, 0, 0, true)] += .09; // stiffer, damped coil-over with useful static preload
       }
       wheels.push({ hl, hr, rim, front, side, stiff, ax: [0, 0, 1], cx: 0, cy: 0, cz: 0, om: 0 });
     }
@@ -86,6 +92,7 @@ const Phys = (() => {
     S.V = new Float64Array(S.N * 3); S.F = new Float64Array(S.N * 3);
     S.M = new Float64Array(mass); S.MU = new Float64Array(mu); S.KIND = Uint8Array.from(kind); S.TOUCH = new Uint8Array(S.N);
     S.BA = Int32Array.from(BA); S.BB = Int32Array.from(BB); S.BL0 = new Float64Array(BL); S.BL1 = new Float64Array(BL);
+    S.SPRING = Uint8Array.from(springBeam); S.ZONE = Uint8Array.from(zone);
     S.BK = new Float64Array(BK); S.BK0 = new Float64Array(BK); S.BC = new Float64Array(BC); S.BT = Uint8Array.from(BT);
     S.YC = new Float64Array(YCa); S.YT = new Float64Array(YTa); S.nodeDmg = new Float32Array(nBody);
   })();
@@ -174,16 +181,26 @@ const Phys = (() => {
       const ux = dx / L, uy = dy / L, uz = dz / L, L0 = BL0[b], body = BT[b] === 0;
       let f = k * (L - L0) + BC[b] * ((V[c] - V[a]) * ux + (V[c + 1] - V[a + 1]) * uy + (V[c + 2] - V[a + 2]) * uz);
       if (L < .5 * L0 && (body || k < 1e5)) f += (body ? 3 : 8) * k * (L - .5 * L0);   // crushed beams / bump stops go solid
+      if (S.SPRING[b]) {
+        // Progressive suspension bump stop: prevent the chassis from collapsing onto the tires.
+        const stopLength = L0 - .22;
+        if (L < stopLength) f += 3e5 * (L - stopLength);
+      }
       F[a] += f * ux; F[a + 1] += f * uy; F[a + 2] += f * uz; F[c] -= f * ux; F[c + 1] -= f * uy; F[c + 2] -= f * uz;
       if (body) {                                                            // dent, soften as it crushes, snap
         const s = (L - L0) / L0, yc = S.YC[b] * str, yt = S.YT[b] * str;
         if (s < -yc) {
           BL0[b] = L / (1 - yc * .999);
-          const endZone = (a / 3 < 4 || a / 3 > 12 || c / 3 < 4 || c / 3 > 12);
-          if (BK[b] > .18 * BK0[b]) BK[b] *= endZone ? .9992 : .99985;
+          const za = S.ZONE[a / 3], zc = S.ZONE[c / 3], zoneLevel = Math.max(za, zc);
+          // Soften per simulated second, not per substep. This prevents the whole frame
+          // from losing nearly all of its stiffness during one sustained impact.
+          const softenRate = zoneLevel === 2 ? .60 : zoneLevel === 1 ? .18 : .025;
+          if (BK[b] > .24 * BK0[b]) BK[b] *= Math.exp(-softenRate * dt);
         }
         else if (s > yt) BL0[b] = L / (1 + yt * .999);
-        if (s > .95 * str && (a / 3 < 4 || a / 3 > 12 || c / 3 < 4 || c / 3 > 12)) { BK[b] = 0; S.broken++; }
+        const zoneLevel = Math.max(S.ZONE[a / 3], S.ZONE[c / 3]);
+        // Only the outer crumple zones can tear loose; the cabin and transition stay connected.
+        if (zoneLevel === 2 && s > 1.2 * str) { BK[b] = 0; S.broken++; }
       }
     }
     // beams collide too (not just nodes), so blocks can't poke through the gaps in the lattice
