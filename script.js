@@ -43,7 +43,7 @@ const sun = new THREE.DirectionalLight(0xffffff, .8); sun.position.set(60, 100, 
 }
 
 // ---------- Deformable body: triangles follow the physics nodes ----------
-const { low, up, roof } = S, P = S.P;
+const { low, mid: up, roof } = S, P = S.P;
 const paintQ = [], glassQ = [];
 // Full body skin across all nine length stations. Each panel follows its own physics nodes.
 for (let j = 0; j < 2; j++) {
@@ -55,10 +55,10 @@ for (let j = 0; j < 2; j++) {
 }
 paintQ.push([low(0, 0), low(0, 1), up(0, 1), up(0, 0)]);
 paintQ.push([low(8, 0), low(8, 1), up(8, 1), up(8, 0)]);
-for (let i = 0; i < 2; i++) paintQ.push([roof(i, 0), roof(i + 1, 0), roof(i + 1, 1), roof(i, 1)]);
+for (let i = 0; i < 2; i++) paintQ.push([roof(i + 3, 0), roof(i + 4, 0), roof(i + 4, 1), roof(i + 3, 1)]);
 for (let j = 0; j < 2; j++) {
-  glassQ.push([up(3, j), up(4, j), roof(1, j), roof(0, j)]);
-  glassQ.push([up(4, j), up(5, j), roof(2, j), roof(1, j)]);
+  glassQ.push([up(3, j), up(4, j), roof(4, j), roof(3, j)]);
+  glassQ.push([up(4, j), up(5, j), roof(5, j), roof(4, j)]);
 }
 function deformable(quads, mat) {
   const idx = []; for (const [a, b, c, d] of quads) idx.push(a, b, c, a, c, d);
