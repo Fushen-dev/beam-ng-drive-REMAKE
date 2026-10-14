@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Crumple 3D - WebGL Driving Sandbox</title>
+  <title>Soft-Body Drive Lab</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,8 +15,8 @@
   </div>
 
   <aside id="panel">
-    <h1>Crumple 3D</h1>
-    <p class="sub">A 3D node-beam soft-body car. Drive it, then break it.</p>
+    <h1>Soft-Body Drive Lab</h1>
+    <p class="sub">Crash physics, suspension whoops, and a launch ramp. Inspired by BeamNG.drive.</p>
     <dl class="keys">
       <dt>W / Up</dt><dd>Gas</dd>
       <dt>S / Down</dt><dd>Brake, then reverse</dd>
@@ -26,6 +26,7 @@
       <dt>C</dt><dd>Change camera</dd>
       <dt>B</dt><dd>Show the beams</dd>
       <dt>T</dt><dd>Slow motion</dd>
+      <dt>Course</dt><dd>Whoops at 85m, jump at 34m</dd>
     </dl>
     <label for="strength">Body strength <output id="strengthOut">1.0x</output></label>
     <input id="strength" type="range" min="0.3" max="3" step="0.1" value="1">
@@ -37,6 +38,7 @@
   </aside>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="physics.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
